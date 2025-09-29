@@ -27,7 +27,7 @@ export default function Home() {
             Welcome
           </h1>
           <p className="text-gray-600">
-            A safe space to talk about how you're feeling
+            A safe space to talk about how you&apos;re feeling
           </p>
         </div>
 
@@ -62,7 +62,7 @@ export default function Home() {
           <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-xs text-yellow-800">
               <strong>Important:</strong> This is not a substitute for professional mental health care.
-              If you're in crisis, please contact a crisis helpline immediately.
+              If you&apos;re in crisis, please contact a crisis helpline immediately.
             </p>
           </div>
         </div>

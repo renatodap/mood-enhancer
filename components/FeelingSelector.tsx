@@ -1,18 +1,7 @@
 'use client';
 
 import { FeelingOption, FeelingType } from '@/types';
-import {
-  Cloud,
-  Frown,
-  Zap,
-  Heart,
-  UserX,
-  AlertCircle,
-  BatteryLow,
-  HelpCircle,
-  Angry,
-  CloudRain
-} from 'lucide-react';
+// Icons imported but using emojis for feeling buttons instead
 
 const FEELING_OPTIONS: FeelingOption[] = [
   {

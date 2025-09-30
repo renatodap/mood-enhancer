@@ -1,6 +1,8 @@
 import Groq from 'groq-sdk';
 
-export const MODEL = 'llama-3.1-70b-versatile';
+// Use a valid Groq model - llama-3.3-70b-versatile or llama-3.1-70b-versatile
+// Check https://console.groq.com/docs/models for available models
+export const MODEL = 'llama-3.3-70b-versatile';
 export const TEMPERATURE = 0.7;
 export const MAX_TOKENS = 500;
 
@@ -14,5 +16,6 @@ export function getGroqClient() {
 
   return new Groq({
     apiKey: apiKey,
+    baseURL: 'https://api.groq.com/openai/v1',
   });
 }

@@ -31,13 +31,15 @@ export async function POST(request: NextRequest) {
       })),
     ];
 
-    let responseMessage: string;
+    let responseMessage: string | null = null;
     let usedFallback = false;
+    let groqAttempted = false;
 
     // Try Groq first (preferred - faster and free)
     if (process.env.GROQ_API_KEY) {
       try {
         console.log('Attempting Groq API with model:', MODEL);
+        groqAttempted = true;
         const groq = getGroqClient();
         const completion = await groq.chat.completions.create({
           messages: formattedMessages,
@@ -46,31 +48,42 @@ export async function POST(request: NextRequest) {
           max_tokens: MAX_TOKENS,
         });
 
-        responseMessage = completion.choices[0]?.message?.content ||
-          "I'm here to help. Can you tell me more about what you're experiencing?";
+        responseMessage = completion.choices[0]?.message?.content || null;
+
+        // If response is empty or invalid, throw to trigger fallback
+        if (!responseMessage || responseMessage.trim().length === 0) {
+          throw new Error('Empty response from Groq');
+        }
 
         console.log('✓ Groq API succeeded');
       } catch (groqError) {
-        console.warn('Groq API failed, trying OpenRouter fallback...', groqError);
-
-        // Fallback to OpenRouter
-        if (isOpenRouterAvailable()) {
-          responseMessage = await createOpenRouterCompletion(formattedMessages);
-          usedFallback = true;
-          console.log('✓ OpenRouter fallback succeeded');
-        } else {
-          throw new Error('Both Groq and OpenRouter APIs unavailable');
-        }
+        console.warn('Groq API failed:', groqError instanceof Error ? groqError.message : 'Unknown error');
+        responseMessage = null; // Reset to try fallback
       }
-    } else if (isOpenRouterAvailable()) {
-      // No Groq key, use OpenRouter directly
-      console.log('Using OpenRouter (Groq not configured)');
-      responseMessage = await createOpenRouterCompletion(formattedMessages);
-      usedFallback = true;
-    } else {
+    }
+
+    // If Groq failed or wasn't available, try OpenRouter
+    if (!responseMessage && isOpenRouterAvailable()) {
+      try {
+        console.log(groqAttempted ? 'Trying OpenRouter fallback...' : 'Using OpenRouter (Groq not configured)');
+        responseMessage = await createOpenRouterCompletion(formattedMessages);
+        usedFallback = true;
+        console.log('✓ OpenRouter succeeded');
+      } catch (openRouterError) {
+        console.error('OpenRouter API failed:', openRouterError instanceof Error ? openRouterError.message : 'Unknown error');
+        responseMessage = null;
+      }
+    }
+
+    // If both failed, return error
+    if (!responseMessage) {
+      const errorMsg = groqAttempted && !isOpenRouterAvailable()
+        ? 'Primary API unavailable. Please configure OPENROUTER_API_KEY as fallback.'
+        : 'Both AI services are currently unavailable. Please try again in a moment.';
+
       return NextResponse.json(
-        { error: 'No API keys configured. Please set GROQ_API_KEY or OPENROUTER_API_KEY.' },
-        { status: 500 }
+        { error: errorMsg },
+        { status: 503 }
       );
     }
 

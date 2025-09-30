@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getGroqClient, MODEL, TEMPERATURE, MAX_TOKENS } from '@/lib/groq';
+import { createOpenRouterCompletion, isOpenRouterAvailable } from '@/lib/openrouter';
 import { getSystemPrompt } from '@/lib/prompts';
 import { ChatRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
-    // Check if API key is configured
-    if (!process.env.GROQ_API_KEY) {
-      console.error('GROQ_API_KEY environment variable is not set');
-      return NextResponse.json(
-        { error: 'API key not configured. Please set GROQ_API_KEY environment variable.' },
-        { status: 500 }
-      );
-    }
-
     const body: ChatRequest = await request.json();
     const { messages, feeling } = body;
 
@@ -27,8 +19,8 @@ export async function POST(request: NextRequest) {
     // Get the system prompt for the specific feeling
     const systemPrompt = getSystemPrompt(feeling);
 
-    // Prepare messages for Groq API
-    const groqMessages = [
+    // Prepare messages
+    const formattedMessages = [
       {
         role: 'system' as const,
         content: systemPrompt,
@@ -39,21 +31,48 @@ export async function POST(request: NextRequest) {
       })),
     ];
 
-    console.log('Calling Groq API with model:', MODEL);
+    let responseMessage: string;
+    let usedFallback = false;
 
-    // Get Groq client with runtime API key
-    const groq = getGroqClient();
+    // Try Groq first (preferred - faster and free)
+    if (process.env.GROQ_API_KEY) {
+      try {
+        console.log('Attempting Groq API with model:', MODEL);
+        const groq = getGroqClient();
+        const completion = await groq.chat.completions.create({
+          messages: formattedMessages,
+          model: MODEL,
+          temperature: TEMPERATURE,
+          max_tokens: MAX_TOKENS,
+        });
 
-    // Call Groq API
-    const completion = await groq.chat.completions.create({
-      messages: groqMessages,
-      model: MODEL,
-      temperature: TEMPERATURE,
-      max_tokens: MAX_TOKENS,
-    });
+        responseMessage = completion.choices[0]?.message?.content ||
+          "I'm here to help. Can you tell me more about what you're experiencing?";
 
-    const responseMessage = completion.choices[0]?.message?.content ||
-      "I'm here to help. Can you tell me more about what you're experiencing?";
+        console.log('✓ Groq API succeeded');
+      } catch (groqError) {
+        console.warn('Groq API failed, trying OpenRouter fallback...', groqError);
+
+        // Fallback to OpenRouter
+        if (isOpenRouterAvailable()) {
+          responseMessage = await createOpenRouterCompletion(formattedMessages);
+          usedFallback = true;
+          console.log('✓ OpenRouter fallback succeeded');
+        } else {
+          throw new Error('Both Groq and OpenRouter APIs unavailable');
+        }
+      }
+    } else if (isOpenRouterAvailable()) {
+      // No Groq key, use OpenRouter directly
+      console.log('Using OpenRouter (Groq not configured)');
+      responseMessage = await createOpenRouterCompletion(formattedMessages);
+      usedFallback = true;
+    } else {
+      return NextResponse.json(
+        { error: 'No API keys configured. Please set GROQ_API_KEY or OPENROUTER_API_KEY.' },
+        { status: 500 }
+      );
+    }
 
     // Check for medical red flags (basic keyword detection)
     const shouldRecommendHelp = detectMedicalConcerns(responseMessage);
@@ -61,21 +80,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       message: responseMessage,
       shouldRecommendHelp,
+      _meta: usedFallback ? { provider: 'openrouter' } : { provider: 'groq' },
     });
   } catch (error) {
     console.error('Error in chat API:', error);
 
-    // Handle Groq API specific errors
     if (error instanceof Error) {
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
-
-      if (error.message.includes('API key') || error.message.includes('401') || error.message.includes('authentication')) {
-        return NextResponse.json(
-          { error: 'API authentication failed. Please check your Groq API key in environment variables.' },
-          { status: 500 }
-        );
-      }
 
       return NextResponse.json(
         { error: `API Error: ${error.message}` },

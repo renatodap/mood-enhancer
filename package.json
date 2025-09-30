@@ -12,6 +12,7 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
     "groq-sdk": "^0.33.0",
     "lucide-react": "^0.544.0",
     "next": "15.5.4",

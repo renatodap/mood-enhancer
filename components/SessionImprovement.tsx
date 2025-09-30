@@ -52,7 +52,7 @@ export default function SessionImprovement({
 
           {improvement !== 0 && (
             <p className="text-lg text-gray-600">
-              {Math.abs(improvementPercent)}% {improvement > 0 ? 'improvement' : 'increase'}
+              {Math.abs(improvementPercent)}% {improvement > 0 ? 'improvement' : 'increase in distress'}
             </p>
           )}
         </div>

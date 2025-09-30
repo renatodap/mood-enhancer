@@ -16,8 +16,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the system prompt for the specific feeling
-    const systemPrompt = getSystemPrompt(feeling);
+    // Count user messages to track session progress
+    const userMessageCount = messages.filter(msg => msg.role === 'user').length;
+    const MAX_USER_MESSAGES = 4;
+
+    // Get the system prompt for the specific feeling with message count context
+    const systemPrompt = getSystemPrompt(feeling, userMessageCount, MAX_USER_MESSAGES);
 
     // Prepare messages
     const formattedMessages = [

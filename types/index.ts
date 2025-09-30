@@ -151,6 +151,7 @@ export interface SessionImprovementProps {
   preRating: number;
   postRating: number;
   feeling: FeelingType;
+  messages: Message[]; // Full conversation for AI song recommendation
   onViewProgress: () => void;
   onStartNew: () => void;
 }

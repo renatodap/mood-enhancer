@@ -279,6 +279,7 @@ export default function TherapySession({
         preRating={currentSession.preRating}
         postRating={currentSession.postRating || 0}
         feeling={feeling}
+        messages={currentSession.messages}
         onViewProgress={handleViewProgress}
         onStartNew={handleStartNewFromImprovement}
       />

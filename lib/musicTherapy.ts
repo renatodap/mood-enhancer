@@ -704,3 +704,81 @@ export function recordMusicUsage(
     console.error('Failed to record music usage:', error);
   }
 }
+
+/**
+ * Use AI to analyze the full conversation and recommend the perfect song
+ * This replaces the simple algorithm-based recommendation for a more context-aware selection
+ */
+export async function getAIRecommendedSong(
+  messages: Array<{ role: string; content: string }>,
+  feeling: FeelingType,
+  improvement: number
+): Promise<Song> {
+  try {
+    // Build a comprehensive song list for the AI to choose from
+    const songList = MUSIC_LIBRARY.map(song =>
+      `ID: ${song.id}\nTitle: "${song.title}" by ${song.artist}\nPhase: ${song.phase}\nFeelings: ${song.feelings.join(', ')}`
+    ).join('\n\n');
+
+    // Prepare conversation summary for AI
+    const conversationSummary = messages
+      .map(msg => `${msg.role === 'user' ? 'User' : 'Therapist'}: ${msg.content}`)
+      .join('\n');
+
+    const prompt = `You are a music therapist analyzing a therapy session to recommend the perfect song.
+
+CONVERSATION SUMMARY:
+${conversationSummary}
+
+CONTEXT:
+- User's initial feeling: ${feeling}
+- Mood improvement: ${improvement > 0 ? `+${improvement} points (improved)` : improvement < 0 ? `${improvement} points (worsened)` : 'no change'}
+
+SONG LIBRARY:
+${songList}
+
+INSTRUCTIONS:
+Based on the ENTIRE conversation (not just the initial feeling), choose ONE song that:
+1. Matches where they are emotionally RIGHT NOW (after the conversation)
+2. If they improved: choose an "uplift" phase song to celebrate progress
+3. If they didn't improve or worsened: choose a "meet" phase song that validates their current state
+4. Consider specific themes discussed (loss, relationships, stress, hope, etc.)
+
+Respond with ONLY the song ID (e.g., "hey-jude"). Nothing else.`;
+
+    // Call API with the conversation analysis
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [{ role: 'user', content: prompt }],
+        feeling: 'confused', // Doesn't matter for this analysis
+      }),
+    });
+
+    if (!response.ok) {
+      console.warn('AI song recommendation failed, falling back to algorithm');
+      return getRecommendedSongForSession(feeling, improvement);
+    }
+
+    const data = await response.json();
+    const songId = data.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+
+    // Find the song by ID
+    const recommendedSong = MUSIC_LIBRARY.find(song => song.id === songId);
+
+    if (recommendedSong) {
+      console.log('AI recommended song:', recommendedSong.title);
+      return recommendedSong;
+    }
+
+    // Fallback if AI returns invalid ID
+    console.warn('AI returned invalid song ID, falling back to algorithm');
+    return getRecommendedSongForSession(feeling, improvement);
+
+  } catch (error) {
+    console.error('Error in AI song recommendation:', error);
+    // Fallback to original algorithm
+    return getRecommendedSongForSession(feeling, improvement);
+  }
+}

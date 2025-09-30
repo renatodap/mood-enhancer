@@ -1,22 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SessionImprovementProps } from '@/types';
-import { TrendingUp, TrendingDown, Minus, Music } from 'lucide-react';
-import { getRecommendedSongForSession } from '@/lib/musicTherapy';
+import { TrendingUp, TrendingDown, Minus, Music, Loader2 } from 'lucide-react';
+import { getAIRecommendedSong, Song } from '@/lib/musicTherapy';
 
 export default function SessionImprovement({
   preRating,
   postRating,
   feeling,
+  messages,
   onViewProgress,
   onStartNew,
 }: SessionImprovementProps) {
   const improvement = preRating - postRating;
   const improvementPercent = preRating === 0 ? 0 : Math.round((improvement / preRating) * 100);
 
-  const recommendedSong = getRecommendedSongForSession(feeling, improvement);
+  const [recommendedSong, setRecommendedSong] = useState<Song | null>(null);
+  const [loadingSong, setLoadingSong] = useState(true);
   const [showingSong, setShowingSong] = useState(true);
+
+  // Use AI to analyze conversation and recommend perfect song
+  useEffect(() => {
+    async function loadSong() {
+      try {
+        setLoadingSong(true);
+        const song = await getAIRecommendedSong(messages, feeling, improvement);
+        setRecommendedSong(song);
+      } catch (error) {
+        console.error('Failed to load song recommendation:', error);
+      } finally {
+        setLoadingSong(false);
+      }
+    }
+    loadSong();
+  }, [messages, feeling, improvement]);
 
   const getEncouragementMessage = () => {
     if (improvement > 3) {
@@ -96,34 +114,43 @@ export default function SessionImprovement({
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 mb-4">
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <p className="font-medium text-gray-900">{recommendedSong.title}</p>
-                  <p className="text-sm text-gray-600">{recommendedSong.artist}</p>
+            {loadingSong ? (
+              <div className="bg-white rounded-xl p-8 mb-4 flex flex-col items-center justify-center">
+                <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mb-3" />
+                <p className="text-sm text-gray-600">Finding the perfect song for you...</p>
+              </div>
+            ) : recommendedSong ? (
+              <>
+                <div className="bg-white rounded-xl p-4 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <p className="font-medium text-gray-900">{recommendedSong.title}</p>
+                      <p className="text-sm text-gray-600">{recommendedSong.artist}</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg overflow-hidden">
+                    <iframe
+                      width="100%"
+                      height="200"
+                      src={`https://www.youtube.com/embed/${recommendedSong.youtubeId}?autoplay=0`}
+                      title={`${recommendedSong.title} by ${recommendedSong.artist}`}
+                      frameBorder="0"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                      className="w-full"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div className="rounded-lg overflow-hidden">
-                <iframe
-                  width="100%"
-                  height="200"
-                  src={`https://www.youtube.com/embed/${recommendedSong.youtubeId}?autoplay=0`}
-                  title={`${recommendedSong.title} by ${recommendedSong.artist}`}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  className="w-full"
-                />
-              </div>
-            </div>
-
-            <button
-              onClick={() => setShowingSong(false)}
-              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
-            >
-              Hide song
-            </button>
+                <button
+                  onClick={() => setShowingSong(false)}
+                  className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Hide song
+                </button>
+              </>
+            ) : null}
           </div>
         )}
 

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { groq, MODEL, TEMPERATURE, MAX_TOKENS } from '@/lib/groq';
+import { getGroqClient, MODEL, TEMPERATURE, MAX_TOKENS } from '@/lib/groq';
 import { getSystemPrompt } from '@/lib/prompts';
 import { ChatRequest } from '@/types';
 
@@ -40,6 +40,9 @@ export async function POST(request: NextRequest) {
     ];
 
     console.log('Calling Groq API with model:', MODEL);
+
+    // Get Groq client with runtime API key
+    const groq = getGroqClient();
 
     // Call Groq API
     const completion = await groq.chat.completions.create({

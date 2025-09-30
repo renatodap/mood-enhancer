@@ -151,28 +151,28 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
       </div>
 
       {/* Therapeutic Space - Centered Content */}
-      <div className="flex-1 flex items-center justify-center px-6 py-12">
-        <div className="w-full max-w-2xl">
+      <div className="flex-1 flex items-center justify-center px-6 py-8 overflow-y-auto">
+        <div className="w-full max-w-xl">
           {/* AI Message Display */}
           {isThinking ? (
-            <div className="text-center space-y-6 animate-fadeIn">
-              <Loader2 className="w-8 h-8 text-purple-400 animate-spin mx-auto" />
+            <div className="text-center space-y-4 animate-fadeIn">
+              <Loader2 className="w-7 h-7 text-purple-400 animate-spin mx-auto" />
               <p className="text-gray-400 text-sm">Listening...</p>
             </div>
           ) : (
-            <div className="space-y-8 animate-fadeIn">
+            <div className="space-y-6 animate-fadeIn">
               {currentAIMessage && (
-                <p className="text-xl md:text-2xl text-gray-700 leading-relaxed text-center font-light">
+                <p className="text-lg md:text-xl text-gray-700 leading-relaxed text-center">
                   {currentAIMessage}
                 </p>
               )}
 
               {/* Feel Better Button */}
               {showFeelBetter && !isThinking && (
-                <div className="flex justify-center animate-fadeIn">
+                <div className="flex justify-center pt-4 animate-fadeIn">
                   <button
                     onClick={handleFeelBetter}
-                    className="px-6 py-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition-all"
+                    className="px-5 py-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition-all border border-green-200"
                   >
                     I feel better now
                   </button>
@@ -185,28 +185,25 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
 
       {/* Input Area - Simple and Clean */}
       {showInput && (
-        <div className="px-6 pb-8 animate-fadeIn">
-          <div className="max-w-2xl mx-auto">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
+        <div className="px-6 pb-6 animate-fadeIn">
+          <div className="max-w-xl mx-auto">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Share what's on your mind..."
-                className="w-full resize-none border-none outline-none text-gray-700 placeholder-gray-400 text-lg"
+                className="w-full resize-none border-none outline-none text-gray-700 placeholder-gray-400"
                 rows={1}
                 disabled={isThinking}
-                style={{ maxHeight: '200px' }}
+                style={{ maxHeight: '120px' }}
               />
-              <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-100">
-                <div className="text-xs text-gray-400">
-                  Press Enter to send
-                </div>
+              <div className="flex justify-end items-center mt-2 pt-2 border-t border-gray-100">
                 <button
                   onClick={sendMessage}
                   disabled={!inputValue.trim() || isThinking}
-                  className="px-6 py-2 bg-purple-500 text-white text-sm rounded-full hover:bg-purple-600 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+                  className="px-5 py-1.5 bg-purple-500 text-white text-sm rounded-full hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
                 >
                   Send
                 </button>

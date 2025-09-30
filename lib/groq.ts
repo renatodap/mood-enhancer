@@ -4,7 +4,7 @@ import Groq from 'groq-sdk';
 // Check https://console.groq.com/docs/models for available models
 export const MODEL = 'llama-3.3-70b-versatile';
 export const TEMPERATURE = 0.7;
-export const MAX_TOKENS = 500;
+export const MAX_TOKENS = 150; // Keep responses short and focused
 
 // Create Groq client lazily at runtime to ensure env vars are loaded
 export function getGroqClient() {

@@ -5,6 +5,15 @@ import { ChatRequest } from '@/types';
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if API key is configured
+    if (!process.env.GROQ_API_KEY) {
+      console.error('GROQ_API_KEY environment variable is not set');
+      return NextResponse.json(
+        { error: 'API key not configured. Please set GROQ_API_KEY environment variable.' },
+        { status: 500 }
+      );
+    }
+
     const body: ChatRequest = await request.json();
     const { messages, feeling } = body;
 
@@ -30,6 +39,8 @@ export async function POST(request: NextRequest) {
       })),
     ];
 
+    console.log('Calling Groq API with model:', MODEL);
+
     // Call Groq API
     const completion = await groq.chat.completions.create({
       messages: groqMessages,
@@ -53,16 +64,24 @@ export async function POST(request: NextRequest) {
 
     // Handle Groq API specific errors
     if (error instanceof Error) {
-      if (error.message.includes('API key')) {
+      console.error('Error message:', error.message);
+      console.error('Error stack:', error.stack);
+
+      if (error.message.includes('API key') || error.message.includes('401') || error.message.includes('authentication')) {
         return NextResponse.json(
-          { error: 'API configuration error. Please check your Groq API key.' },
+          { error: 'API authentication failed. Please check your Groq API key in environment variables.' },
           { status: 500 }
         );
       }
+
+      return NextResponse.json(
+        { error: `API Error: ${error.message}` },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
-      { error: 'Failed to process request' },
+      { error: 'Failed to process request. Please try again.' },
       { status: 500 }
     );
   }

@@ -3,9 +3,10 @@
  * Using cheapest/free models for cost efficiency
  */
 
-// OpenRouter free models (no cost per request)
-// Using DeepSeek as primary - free tier with good quality
-export const OPENROUTER_MODEL = 'deepseek/deepseek-chat:free';
+// OpenRouter model selection
+// Using DeepSeek R1 - cheapest quality model at ~$0.55 per million input tokens
+// Alternative: 'meta-llama/llama-3.2-3b-instruct:free' (free but lower quality)
+export const OPENROUTER_MODEL = 'deepseek/deepseek-r1';
 export const OPENROUTER_TEMPERATURE = 0.7;
 export const OPENROUTER_MAX_TOKENS = 500;
 

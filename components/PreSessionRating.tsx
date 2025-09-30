@@ -52,7 +52,6 @@ export default function PreSessionRating({
           value={rating}
           onChange={setRating}
           label=""
-          feeling={feeling}
         />
 
         <div className="flex justify-center pt-4">

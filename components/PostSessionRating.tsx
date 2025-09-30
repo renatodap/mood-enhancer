@@ -1,17 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { FeelingType } from '@/types';
 import MoodRatingScale from './MoodRatingScale';
 
 interface PostSessionRatingProps {
-  feeling: FeelingType;
   preRating: number;
   onComplete: (postRating: number) => void;
 }
 
 export default function PostSessionRating({
-  feeling,
   preRating,
   onComplete,
 }: PostSessionRatingProps) {
@@ -39,7 +36,6 @@ export default function PostSessionRating({
           value={rating}
           onChange={setRating}
           label=""
-          feeling={feeling}
         />
 
         <div className="flex justify-center pt-4">

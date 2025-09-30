@@ -144,14 +144,12 @@ export interface MoodRatingScaleProps {
   value: number | null;
   onChange: (rating: number) => void;
   label: string;
-  feeling: FeelingType;
   disabled?: boolean;
 }
 
 export interface SessionImprovementProps {
   preRating: number;
   postRating: number;
-  feeling: FeelingType;
   onViewProgress: () => void;
   onStartNew: () => void;
 }

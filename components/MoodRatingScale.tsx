@@ -6,7 +6,6 @@ export default function MoodRatingScale({
   value,
   onChange,
   label,
-  feeling,
   disabled = false,
 }: MoodRatingScaleProps) {
   const ratings = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];

@@ -184,7 +184,7 @@ export default function TherapySession({
     setCurrentSession(completedSession);
 
     // Generate and save summary
-    const summary = generateSummary(completedSession.id, completedSession.messages);
+    const summary = generateSummary(completedSession);
     saveSummary(summary);
 
     setViewState('improvement');
@@ -221,10 +221,6 @@ export default function TherapySession({
   };
 
   // Session Improvement
-  const handleViewSummary = () => {
-    setViewState('summary');
-  };
-
   const handleStartNewFromImprovement = () => {
     onChangeFeeling();
   };
@@ -261,10 +257,10 @@ export default function TherapySession({
   if (viewState === 'improvement' && currentSession) {
     return (
       <SessionImprovement
-        session={currentSession}
+        preRating={currentSession.preRating}
+        postRating={currentSession.postRating || 0}
         onViewProgress={handleViewProgress}
-        onViewSummary={handleViewSummary}
-        onNewSession={handleStartNewFromImprovement}
+        onStartNew={handleStartNewFromImprovement}
       />
     );
   }

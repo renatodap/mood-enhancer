@@ -53,14 +53,14 @@ export default function SessionSummaryView({
         )}
 
         {/* Insights */}
-        {summary.insights.length > 0 && (
+        {summary.keyInsights.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-lg font-medium text-gray-800">
               <Lightbulb className="w-5 h-5 text-amber-500" />
               <h3>Key Insights</h3>
             </div>
             <ul className="space-y-3">
-              {summary.insights.map((insight, index) => (
+              {summary.keyInsights.map((insight, index) => (
                 <li
                   key={index}
                   className="flex gap-3 p-4 bg-amber-50 rounded-xl"
@@ -101,7 +101,7 @@ export default function SessionSummaryView({
 
         {/* Empty State */}
         {summary.topics.length === 0 &&
-          summary.insights.length === 0 &&
+          summary.keyInsights.length === 0 &&
           summary.actionItems.length === 0 && (
             <div className="text-center py-8 space-y-3">
               <p className="text-gray-600">

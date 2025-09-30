@@ -6,7 +6,6 @@ import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 export default function SessionImprovement({
   preRating,
   postRating,
-  feeling,
   onViewProgress,
   onStartNew,
 }: SessionImprovementProps) {
@@ -93,7 +92,7 @@ export default function SessionImprovement({
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
             <p className="font-medium">Consider Professional Support</p>
             <p className="mt-1">
-              If you're consistently not feeling better or feeling worse, please reach out to a mental health professional.
+              If you&apos;re consistently not feeling better or feeling worse, please reach out to a mental health professional.
               <span className="block mt-2 font-semibold">Crisis: Call 988 or text HOME to 741741</span>
             </p>
           </div>

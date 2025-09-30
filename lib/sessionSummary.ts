@@ -1,4 +1,4 @@
-import { SessionSummary, Message } from '@/types';
+import { SessionSummary, Message, MoodSession } from '@/types';
 
 const STORAGE_KEY = 'wellness_session_summaries';
 
@@ -193,15 +193,25 @@ export function extractActionItems(messages: Message[]): string[] {
 /**
  * Generate a complete session summary
  */
-export function generateSummary(
-  sessionId: string,
-  messages: Message[]
-): SessionSummary {
+export function generateSummary(session: MoodSession): SessionSummary {
+  const duration = session.endTime && session.startTime
+    ? session.endTime.getTime() - session.startTime.getTime()
+    : 0;
+
   return {
-    sessionId,
-    topics: extractTopics(messages),
-    insights: extractInsights(messages),
-    actionItems: extractActionItems(messages),
+    sessionId: session.id,
+    feeling: session.feeling,
+    topics: extractTopics(session.messages),
+    keyInsights: extractInsights(session.messages),
+    actionItems: extractActionItems(session.messages),
+    copingToolsUsed: session.copingToolsUsed,
+    moodImprovement: {
+      pre: session.preRating,
+      post: session.postRating || 0,
+      change: session.improvement || 0,
+      percentChange: session.improvementPercent || 0,
+    },
+    duration,
     createdAt: new Date(),
   };
 }

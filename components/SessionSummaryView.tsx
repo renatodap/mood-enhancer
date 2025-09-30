@@ -28,7 +28,7 @@ export default function SessionSummaryView({
           <div className="text-5xl mb-2">📝</div>
           <h2 className="text-3xl font-light text-gray-800">Session Summary</h2>
           <p className="text-gray-600">
-            Here&apos;s what we explored together today
+            Here{`'`}s what we explored together today
           </p>
         </div>
 

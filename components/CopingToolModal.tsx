@@ -188,7 +188,7 @@ export default function CopingToolModal({
                   onClick={handleToolComplete}
                   className="flex-1 px-6 py-3 bg-indigo-500 text-white rounded-full font-medium hover:bg-indigo-600 transition-all shadow-lg"
                 >
-                  I&apos;ve Completed This
+                  I{`'`}ve Completed This
                 </button>
               </div>
             </>

@@ -1,26 +1,32 @@
 'use client';
 
+import { useState } from 'react';
 import { SessionImprovementProps } from '@/types';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, Music } from 'lucide-react';
+import { getRecommendedSongForSession } from '@/lib/musicTherapy';
 
 export default function SessionImprovement({
   preRating,
   postRating,
+  feeling,
   onViewProgress,
   onStartNew,
 }: SessionImprovementProps) {
   const improvement = preRating - postRating;
   const improvementPercent = preRating === 0 ? 0 : Math.round((improvement / preRating) * 100);
 
+  const recommendedSong = getRecommendedSongForSession(feeling, improvement);
+  const [showingSong, setShowingSong] = useState(true);
+
   const getEncouragementMessage = () => {
     if (improvement > 3) {
-      return "That&apos;s significant progress! You did great work today.";
+      return "That's significant progress! You did great work today.";
     } else if (improvement > 0) {
       return "Real progress. Every step forward counts.";
     } else if (improvement === 0) {
       return "Sometimes just showing up and talking is enough. You did that.";
     } else {
-      return "It&apos;s okay that things feel harder right now. Please consider reaching out to a professional for additional support.";
+      return "It's okay that things feel harder right now. Please consider reaching out to a professional for additional support.";
     }
   };
 
@@ -73,6 +79,54 @@ export default function SessionImprovement({
           {getEncouragementMessage()}
         </p>
 
+        {/* Recommended Song */}
+        {showingSong && (
+          <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-6 border border-indigo-200">
+            <div className="flex items-center gap-3 mb-4">
+              <Music className="w-6 h-6 text-indigo-600" />
+              <div>
+                <h3 className="font-medium text-gray-800">
+                  {improvement > 0 ? 'Celebrate with music 🎉' : 'A song for you 💙'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {improvement > 0
+                    ? 'You made progress - here' + "'" + 's an uplifting song for you'
+                    : 'This song meets you where you are'}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 mb-4">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="font-medium text-gray-900">{recommendedSong.title}</p>
+                  <p className="text-sm text-gray-600">{recommendedSong.artist}</p>
+                </div>
+              </div>
+
+              <div className="rounded-lg overflow-hidden">
+                <iframe
+                  width="100%"
+                  height="200"
+                  src={`https://www.youtube.com/embed/${recommendedSong.youtubeId}?autoplay=0`}
+                  title={`${recommendedSong.title} by ${recommendedSong.artist}`}
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="w-full"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowingSong(false)}
+              className="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              Hide song
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <button
             onClick={onViewProgress}
@@ -92,7 +146,7 @@ export default function SessionImprovement({
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
             <p className="font-medium">Consider Professional Support</p>
             <p className="mt-1">
-              If you&apos;re consistently not feeling better or feeling worse, please reach out to a mental health professional.
+              If you{`'`}re consistently not feeling better or feeling worse, please reach out to a mental health professional.
               <span className="block mt-2 font-semibold">Crisis: Call 988 or text HOME to 741741</span>
             </p>
           </div>

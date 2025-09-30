@@ -170,7 +170,7 @@ export default function MusicTherapyModal({
             Music Therapy
           </h2>
           <p className="text-gray-600">
-            Songs curated for when you&apos;re feeling{' '}
+            Songs curated for when you{`'`}re feeling{' '}
             <span className="font-medium text-indigo-600">
               {feeling}
             </span>
@@ -204,7 +204,7 @@ export default function MusicTherapyModal({
               No music recommendations available for this feeling yet.
             </p>
             <p className="text-sm text-gray-500">
-              We&apos;re constantly adding more songs!
+              We{`'`}re constantly adding more songs!
             </p>
           </div>
         )}

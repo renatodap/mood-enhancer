@@ -650,6 +650,33 @@ export function getRandomUpliftingSong(): Song {
 }
 
 /**
+ * Get the perfect song for end of session based on feeling and improvement
+ * - If improved significantly (>0): uplifting song
+ * - If stayed same/got worse: comforting "meet" song
+ */
+export function getRecommendedSongForSession(
+  feeling: FeelingType,
+  improvement: number
+): Song {
+  const { meet, uplift } = getMusicForFeeling(feeling);
+
+  // If they improved, give them an uplifting celebration song
+  if (improvement > 0) {
+    if (uplift.length > 0) {
+      return uplift[Math.floor(Math.random() * uplift.length)];
+    }
+  }
+
+  // If they didn't improve or got worse, give comfort/validation
+  if (meet.length > 0) {
+    return meet[Math.floor(Math.random() * meet.length)];
+  }
+
+  // Fallback to any uplifting song
+  return getRandomUpliftingSong();
+}
+
+/**
  * Record music usage (for future analytics)
  */
 export function recordMusicUsage(

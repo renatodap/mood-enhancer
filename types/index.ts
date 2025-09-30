@@ -150,6 +150,7 @@ export interface MoodRatingScaleProps {
 export interface SessionImprovementProps {
   preRating: number;
   postRating: number;
+  feeling: FeelingType;
   onViewProgress: () => void;
   onStartNew: () => void;
 }

@@ -136,15 +136,15 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       {/* Minimal Header */}
-      <div className="px-6 py-4 flex items-center justify-between border-b border-gray-100">
-        <div className="text-sm text-gray-500">
+      <div className="px-6 py-5 flex items-center justify-between bg-white/80 backdrop-blur-sm border-b border-indigo-100/50">
+        <div className="text-sm font-medium text-indigo-600">
           {feeling.charAt(0).toUpperCase() + feeling.slice(1)}
         </div>
         <button
           onClick={onChangeFeeling}
-          className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
+          className="text-sm text-gray-500 hover:text-indigo-600 transition-colors"
         >
           Change feeling
         </button>
@@ -155,24 +155,26 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
         <div className="w-full max-w-xl">
           {/* AI Message Display */}
           {isThinking ? (
-            <div className="text-center space-y-4 animate-fadeIn">
-              <Loader2 className="w-7 h-7 text-purple-400 animate-spin mx-auto" />
-              <p className="text-gray-400 text-sm">Listening...</p>
+            <div className="text-center space-y-5 animate-fadeIn">
+              <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
+              <p className="text-gray-500 text-sm font-light tracking-wide">Listening...</p>
             </div>
           ) : (
-            <div className="space-y-6 animate-fadeIn">
+            <div className="space-y-8 animate-fadeIn">
               {currentAIMessage && (
-                <p className="text-lg md:text-xl text-gray-700 leading-relaxed text-center">
-                  {currentAIMessage}
-                </p>
+                <div className="bg-white/60 backdrop-blur-sm rounded-2xl p-8 shadow-sm border border-indigo-100/50">
+                  <p className="text-lg md:text-xl text-gray-800 leading-relaxed text-center font-light">
+                    {currentAIMessage}
+                  </p>
+                </div>
               )}
 
               {/* Feel Better Button */}
               {showFeelBetter && !isThinking && (
-                <div className="flex justify-center pt-4 animate-fadeIn">
+                <div className="flex justify-center animate-fadeIn">
                   <button
                     onClick={handleFeelBetter}
-                    className="px-5 py-2 text-sm text-green-600 hover:text-green-700 hover:bg-green-50 rounded-full transition-all border border-green-200"
+                    className="px-6 py-2.5 text-sm font-medium text-emerald-600 hover:text-emerald-700 bg-white hover:bg-emerald-50 rounded-full transition-all border-2 border-emerald-200 shadow-sm"
                   >
                     I feel better now
                   </button>
@@ -187,23 +189,23 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
       {showInput && (
         <div className="px-6 pb-6 animate-fadeIn">
           <div className="max-w-xl mx-auto">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-indigo-100/50 p-4">
               <textarea
                 ref={textareaRef}
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
                 placeholder="Share what's on your mind..."
-                className="w-full resize-none border-none outline-none text-gray-700 placeholder-gray-400"
+                className="w-full resize-none border-none outline-none text-gray-800 placeholder-gray-400 bg-transparent font-light"
                 rows={1}
                 disabled={isThinking}
                 style={{ maxHeight: '120px' }}
               />
-              <div className="flex justify-end items-center mt-2 pt-2 border-t border-gray-100">
+              <div className="flex justify-end items-center mt-3 pt-3 border-t border-indigo-100/50">
                 <button
                   onClick={sendMessage}
                   disabled={!inputValue.trim() || isThinking}
-                  className="px-5 py-1.5 bg-purple-500 text-white text-sm rounded-full hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all"
+                  className="px-6 py-2 bg-indigo-500 text-white text-sm font-medium rounded-full hover:bg-indigo-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-sm"
                 >
                   Send
                 </button>

@@ -1,9 +1,24 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Message, FeelingType } from '@/types';
-import { Loader2 } from 'lucide-react';
+import { Message, FeelingType, MoodSession } from '@/types';
+import { Loader2, Heart, Activity } from 'lucide-react';
 import { generateMessageId } from '@/lib/sessionManager';
+import PreSessionRating from './PreSessionRating';
+import PostSessionRating from './PostSessionRating';
+import SessionImprovement from './SessionImprovement';
+import ProgressDashboard from './ProgressDashboard';
+import CopingToolModal from './CopingToolModal';
+import SessionSummaryView from './SessionSummaryView';
+import {
+  createSession,
+  completeSession,
+  saveSessionToStorage,
+  getSessionsFromStorage,
+  calculateProgressStats,
+} from '@/lib/moodTracking';
+import { recordToolUsage } from '@/lib/copingTools';
+import { generateSummary, saveSummary, getSummary } from '@/lib/sessionSummary';
 
 interface TherapySessionProps {
   feeling: FeelingType;
@@ -11,7 +26,21 @@ interface TherapySessionProps {
   onChangeFeeling: () => void;
 }
 
-export default function TherapySession({ feeling, userName, onChangeFeeling }: TherapySessionProps) {
+type ViewState =
+  | 'pre-rating'
+  | 'session'
+  | 'post-rating'
+  | 'improvement'
+  | 'summary'
+  | 'progress';
+
+export default function TherapySession({
+  feeling,
+  userName,
+  onChangeFeeling,
+}: TherapySessionProps) {
+  const [viewState, setViewState] = useState<ViewState>('pre-rating');
+  const [currentSession, setCurrentSession] = useState<MoodSession | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [currentAIMessage, setCurrentAIMessage] = useState('');
   const [inputValue, setInputValue] = useState('');
@@ -19,9 +48,23 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
   const [showInput, setShowInput] = useState(false);
   const [exchangeCount, setExchangeCount] = useState(0);
   const [showFeelBetter, setShowFeelBetter] = useState(false);
+  const [showCopingTools, setShowCopingTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
+    }
+  }, [inputValue]);
+
+  // Pre-Session Rating
+  const handlePreRatingComplete = (rating: number) => {
+    const session = createSession(feeling, rating);
+    setCurrentSession(session);
+    setViewState('session');
+
     // Initial message from therapist
     const initialMessage: Message = {
       id: generateMessageId(),
@@ -32,18 +75,11 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
     setMessages([initialMessage]);
     setCurrentAIMessage(initialMessage.content);
     setShowInput(true);
-  }, [feeling, userName]);
+  };
 
-  useEffect(() => {
-    // Auto-resize textarea
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
-  }, [inputValue]);
-
+  // Session Message Handling
   const sendMessage = async () => {
-    if (!inputValue.trim() || isThinking) return;
+    if (!inputValue.trim() || isThinking || !currentSession) return;
 
     const userMessage: Message = {
       id: generateMessageId(),
@@ -52,11 +88,15 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
       timestamp: new Date(),
     };
 
-    // Add to message history
     const updatedMessages = [...messages, userMessage];
     setMessages(updatedMessages);
 
-    // Clear input and show thinking state
+    // Update session with new message
+    setCurrentSession({
+      ...currentSession,
+      messages: updatedMessages,
+    });
+
     setInputValue('');
     setShowInput(false);
     setIsThinking(true);
@@ -88,21 +128,33 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
         timestamp: new Date(),
       };
 
-      // Add to history and display
-      setMessages((prev) => [...prev, assistantMessage]);
+      const finalMessages = [...updatedMessages, assistantMessage];
+      setMessages(finalMessages);
       setCurrentAIMessage(assistantMessage.content);
       setExchangeCount((prev) => prev + 1);
       setShowFeelBetter(true);
+
+      // Update session with AI response
+      setCurrentSession({
+        ...currentSession,
+        messages: finalMessages,
+      });
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage = "I'm having trouble responding right now. Please try again.";
       setCurrentAIMessage(errorMessage);
-      setMessages((prev) => [...prev, {
+      const errorMsg: Message = {
         id: generateMessageId(),
         role: 'assistant',
         content: errorMessage,
         timestamp: new Date(),
-      }]);
+      };
+      const finalMessages = [...updatedMessages, errorMsg];
+      setMessages(finalMessages);
+      setCurrentSession({
+        ...currentSession!,
+        messages: finalMessages,
+      });
     } finally {
       setIsThinking(false);
       setShowInput(true);
@@ -118,29 +170,153 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
   };
 
   const handleFeelBetter = () => {
-    const message: Message = {
-      id: generateMessageId(),
-      role: 'assistant',
-      content: "I'm really glad to hear that. Remember, you can come back anytime you need support. Take care of yourself.",
-      timestamp: new Date(),
-    };
-    setMessages((prev) => [...prev, message]);
-    setCurrentAIMessage(message.content);
+    setViewState('post-rating');
     setShowFeelBetter(false);
     setShowInput(false);
-
-    // Option to change feeling after feeling better
-    setTimeout(() => {
-      setShowInput(true);
-    }, 2000);
   };
 
+  // Post-Session Rating
+  const handlePostRatingComplete = (rating: number) => {
+    if (!currentSession) return;
+
+    const completedSession = completeSession(currentSession, rating);
+    saveSessionToStorage(completedSession);
+    setCurrentSession(completedSession);
+
+    // Generate and save summary
+    const summary = generateSummary(completedSession.id, completedSession.messages);
+    saveSummary(summary);
+
+    setViewState('improvement');
+  };
+
+  // Coping Tools
+  const handleCopingToolComplete = (toolId: string, rating: number | null) => {
+    if (currentSession) {
+      recordToolUsage(currentSession.id, toolId, true, rating);
+      setCurrentSession({
+        ...currentSession,
+        copingToolsUsed: [...currentSession.copingToolsUsed, toolId],
+      });
+    }
+    setShowCopingTools(false);
+  };
+
+  // Progress Dashboard
+  const handleViewProgress = () => {
+    setViewState('progress');
+  };
+
+  const handleCloseProgress = () => {
+    if (currentSession?.postRating !== null) {
+      setViewState('improvement');
+    } else {
+      setViewState('session');
+    }
+  };
+
+  const handleStartNewFromProgress = () => {
+    // Reset everything for new session
+    onChangeFeeling();
+  };
+
+  // Session Improvement
+  const handleViewSummary = () => {
+    setViewState('summary');
+  };
+
+  const handleStartNewFromImprovement = () => {
+    onChangeFeeling();
+  };
+
+  // Session Summary
+  const handleCloseSummary = () => {
+    setViewState('improvement');
+  };
+
+  const handleStartNewFromSummary = () => {
+    onChangeFeeling();
+  };
+
+  // Render current view
+  if (viewState === 'pre-rating') {
+    return (
+      <PreSessionRating
+        feeling={feeling}
+        userName={userName}
+        onComplete={handlePreRatingComplete}
+      />
+    );
+  }
+
+  if (viewState === 'post-rating') {
+    return (
+      <PostSessionRating
+        preRating={currentSession?.preRating || 0}
+        onComplete={handlePostRatingComplete}
+      />
+    );
+  }
+
+  if (viewState === 'improvement' && currentSession) {
+    return (
+      <SessionImprovement
+        session={currentSession}
+        onViewProgress={handleViewProgress}
+        onViewSummary={handleViewSummary}
+        onNewSession={handleStartNewFromImprovement}
+      />
+    );
+  }
+
+  if (viewState === 'progress') {
+    const sessions = getSessionsFromStorage();
+    const stats = calculateProgressStats(sessions);
+    return (
+      <ProgressDashboard
+        progressData={{ sessions, stats }}
+        onClose={handleCloseProgress}
+        onStartNew={handleStartNewFromProgress}
+      />
+    );
+  }
+
+  if (viewState === 'summary' && currentSession) {
+    const summary = getSummary(currentSession.id);
+    if (summary) {
+      return (
+        <SessionSummaryView
+          summary={summary}
+          onClose={handleCloseSummary}
+          onNewSession={handleStartNewFromSummary}
+        />
+      );
+    }
+  }
+
+  // Main Session View
   return (
     <div className="flex flex-col h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Minimal Header */}
+      {/* Header */}
       <div className="px-6 py-5 flex items-center justify-between bg-white/80 backdrop-blur-sm border-b border-indigo-100/50">
-        <div className="text-sm font-medium text-indigo-600">
-          {feeling.charAt(0).toUpperCase() + feeling.slice(1)}
+        <div className="flex items-center gap-4">
+          <div className="text-sm font-medium text-indigo-600">
+            {feeling.charAt(0).toUpperCase() + feeling.slice(1)}
+          </div>
+          <button
+            onClick={() => setShowCopingTools(true)}
+            className="text-sm text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-1"
+          >
+            <Heart className="w-4 h-4" />
+            Coping Tools
+          </button>
+          <button
+            onClick={handleViewProgress}
+            className="text-sm text-gray-500 hover:text-indigo-600 transition-colors flex items-center gap-1"
+          >
+            <Activity className="w-4 h-4" />
+            Progress
+          </button>
         </div>
         <button
           onClick={onChangeFeeling}
@@ -150,14 +326,15 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
         </button>
       </div>
 
-      {/* Therapeutic Space - Centered Content */}
+      {/* Therapeutic Space */}
       <div className="flex-1 flex items-center justify-center px-6 py-8 overflow-y-auto">
         <div className="w-full max-w-xl">
-          {/* AI Message Display */}
           {isThinking ? (
             <div className="text-center space-y-5 animate-fadeIn">
               <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
-              <p className="text-gray-500 text-sm font-light tracking-wide">Listening...</p>
+              <p className="text-gray-500 text-sm font-light tracking-wide">
+                Listening...
+              </p>
             </div>
           ) : (
             <div className="space-y-8 animate-fadeIn">
@@ -185,7 +362,7 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
         </div>
       </div>
 
-      {/* Input Area - Simple and Clean */}
+      {/* Input Area */}
       {showInput && (
         <div className="px-6 pb-6 animate-fadeIn">
           <div className="max-w-xl mx-auto">
@@ -215,18 +392,28 @@ export default function TherapySession({ feeling, userName, onChangeFeeling }: T
         </div>
       )}
 
-      {/* Crisis Resources - Subtle */}
+      {/* Crisis Resources */}
       <div className="px-6 py-3 bg-amber-50 border-t border-amber-100">
         <p className="text-xs text-center text-amber-800">
           Crisis? <strong>Call 988</strong> or <strong>Text HOME to 741741</strong>
         </p>
       </div>
 
-      {/* Exchange counter - very subtle */}
+      {/* Exchange counter */}
       {exchangeCount > 0 && (
         <div className="absolute top-20 right-6 text-xs text-gray-300">
           {exchangeCount} {exchangeCount === 1 ? 'exchange' : 'exchanges'}
         </div>
+      )}
+
+      {/* Coping Tools Modal */}
+      {showCopingTools && currentSession && (
+        <CopingToolModal
+          feeling={feeling}
+          sessionId={currentSession.id}
+          onClose={() => setShowCopingTools(false)}
+          onToolComplete={handleCopingToolComplete}
+        />
       )}
     </div>
   );

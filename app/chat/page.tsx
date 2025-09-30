@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FeelingType } from '@/types';
 import FeelingSelector from '@/components/FeelingSelector';
-import ChatInterface from '@/components/ChatInterface';
+import TherapySession from '@/components/TherapySession';
 
 export default function ChatPage() {
   const [userName, setUserName] = useState<string>('');
@@ -40,7 +40,7 @@ export default function ChatPage() {
           <FeelingSelector userName={userName} onSelectFeeling={handleSelectFeeling} />
         </div>
       ) : (
-        <ChatInterface
+        <TherapySession
           feeling={selectedFeeling}
           userName={userName}
           onChangeFeeling={handleChangeFeeling}

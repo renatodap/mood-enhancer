@@ -242,9 +242,9 @@ export function getAllSummaries(): SessionSummary[] {
     const data = localStorage.getItem(STORAGE_KEY);
     if (!data) return [];
 
-    const parsed = JSON.parse(data);
+    const parsed = JSON.parse(data) as SessionSummary[];
     return parsed
-      .map((summary: any) => ({
+      .map((summary) => ({
         ...summary,
         createdAt: new Date(summary.createdAt),
       }))

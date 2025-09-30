@@ -6,6 +6,7 @@ import {
   COPING_TOOLS,
   BREATHING_PATTERNS,
 } from '../copingTools';
+import { FeelingType } from '@/types';
 
 beforeEach(() => {
   localStorage.clear();
@@ -65,8 +66,8 @@ describe('copingTools', () => {
         'worried',
       ];
 
-      feelings.forEach((feeling: any) => {
-        const tools = getCopingToolsForFeeling(feeling);
+      feelings.forEach((feeling) => {
+        const tools = getCopingToolsForFeeling(feeling as FeelingType);
         expect(tools.length).toBeGreaterThanOrEqual(2);
       });
     });

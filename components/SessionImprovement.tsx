@@ -15,13 +15,13 @@ export default function SessionImprovement({
 
   const getEncouragementMessage = () => {
     if (improvement > 3) {
-      return "That's significant progress! You did great work today.";
+      return "That&apos;s significant progress! You did great work today.";
     } else if (improvement > 0) {
       return "Real progress. Every step forward counts.";
     } else if (improvement === 0) {
       return "Sometimes just showing up and talking is enough. You did that.";
     } else {
-      return "It's okay that things feel harder right now. Please consider reaching out to a professional for additional support.";
+      return "It&apos;s okay that things feel harder right now. Please consider reaching out to a professional for additional support.";
     }
   };
 

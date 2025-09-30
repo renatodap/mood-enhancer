@@ -101,8 +101,8 @@ function serializeSessions(sessions: MoodSession[]): string {
  */
 function deserializeSessions(data: string): MoodSession[] {
   try {
-    const parsed = JSON.parse(data);
-    return parsed.map((session: any) => ({
+    const parsed = JSON.parse(data) as MoodSession[];
+    return parsed.map((session) => ({
       ...session,
       startTime: new Date(session.startTime),
       endTime: session.endTime ? new Date(session.endTime) : null,

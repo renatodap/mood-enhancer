@@ -199,8 +199,8 @@ export function getAllToolUsage(): CopingToolUsage[] {
     const data = localStorage.getItem(STORAGE_KEY_TOOL_USAGE);
     if (!data) return [];
 
-    const parsed = JSON.parse(data);
-    return parsed.map((usage: any) => ({
+    const parsed = JSON.parse(data) as CopingToolUsage[];
+    return parsed.map((usage) => ({
       ...usage,
       startTime: new Date(usage.startTime),
       endTime: usage.endTime ? new Date(usage.endTime) : null,

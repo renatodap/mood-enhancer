@@ -16,6 +16,5 @@ export function getGroqClient() {
 
   return new Groq({
     apiKey: apiKey,
-    baseURL: 'https://api.groq.com/openai/v1',
   });
 }

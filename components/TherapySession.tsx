@@ -46,8 +46,10 @@ export default function TherapySession({
   const [inputValue, setInputValue] = useState('');
   const [isThinking, setIsThinking] = useState(false);
   const [showInput, setShowInput] = useState(false);
-  const [exchangeCount, setExchangeCount] = useState(0);
+  const [userMessageCount, setUserMessageCount] = useState(0);
   const [showFeelBetter, setShowFeelBetter] = useState(false);
+
+  const MAX_USER_MESSAGES = 4;
   const [showCopingTools, setShowCopingTools] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -131,14 +133,31 @@ export default function TherapySession({
       const finalMessages = [...updatedMessages, assistantMessage];
       setMessages(finalMessages);
       setCurrentAIMessage(assistantMessage.content);
-      setExchangeCount((prev) => prev + 1);
-      setShowFeelBetter(true);
+
+      const newUserMessageCount = userMessageCount + 1;
+      setUserMessageCount(newUserMessageCount);
 
       // Update session with AI response
       setCurrentSession({
         ...currentSession,
         messages: finalMessages,
       });
+
+      // Check if we've reached the message limit
+      if (newUserMessageCount >= MAX_USER_MESSAGES) {
+        // Auto-end session after 4 user messages
+        console.log('Session limit reached (4 messages), ending session...');
+        setShowInput(false);
+        setShowFeelBetter(false);
+
+        // Wait a moment for user to read the last message, then end session
+        setTimeout(() => {
+          setViewState('post-rating');
+        }, 2000);
+      } else {
+        // Show "feel better" button for messages 1-3
+        setShowFeelBetter(true);
+      }
     } catch (error) {
       console.error('Error sending message:', error);
       const errorMessage = "I'm having trouble responding right now. Please try again.";
@@ -396,10 +415,26 @@ export default function TherapySession({
         </p>
       </div>
 
-      {/* Exchange counter */}
-      {exchangeCount > 0 && (
-        <div className="absolute top-20 right-6 text-xs text-gray-300">
-          {exchangeCount} {exchangeCount === 1 ? 'exchange' : 'exchanges'}
+      {/* Session Progress Indicator */}
+      {userMessageCount > 0 && (
+        <div className="absolute top-20 right-6 bg-white/80 backdrop-blur-sm rounded-full px-4 py-2 shadow-sm border border-indigo-100">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-gray-700">
+              {userMessageCount} / {MAX_USER_MESSAGES} messages
+            </span>
+            <div className="flex gap-1">
+              {[...Array(MAX_USER_MESSAGES)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    i < userMessageCount
+                      ? 'bg-indigo-500'
+                      : 'bg-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

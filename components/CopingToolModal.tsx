@@ -5,18 +5,21 @@ import { CopingTool, BreathingPattern, FeelingType } from '@/types';
 import { X, Clock, Sparkles } from 'lucide-react';
 import BreathingExercise from './BreathingExercise';
 import GroundingExercise from './GroundingExercise';
+import MusicTherapyModal from './MusicTherapyModal';
 import { getCopingToolsForFeeling, BREATHING_PATTERNS } from '@/lib/copingTools';
 
 interface CopingToolModalProps {
   feeling: FeelingType;
+  sessionId?: string;
   onClose: () => void;
   onToolComplete: (toolId: string, rating: number | null) => void;
 }
 
-type ViewState = 'list' | 'instructions' | 'interactive';
+type ViewState = 'list' | 'instructions' | 'interactive' | 'music';
 
 export default function CopingToolModal({
   feeling,
+  sessionId,
   onClose,
   onToolComplete,
 }: CopingToolModalProps) {
@@ -28,7 +31,11 @@ export default function CopingToolModal({
 
   const handleSelectTool = (tool: CopingTool) => {
     setSelectedTool(tool);
-    if (tool.isInteractive) {
+
+    // Handle music therapy specially
+    if (tool.id === 'music-therapy') {
+      setViewState('music');
+    } else if (tool.isInteractive) {
       setViewState('interactive');
     } else {
       setViewState('instructions');
@@ -247,6 +254,21 @@ export default function CopingToolModal({
         />
       );
     }
+  }
+
+  // Music Therapy View
+  if (viewState === 'music' && selectedTool) {
+    return (
+      <MusicTherapyModal
+        feeling={feeling}
+        sessionId={sessionId}
+        onClose={() => {
+          // Mark as completed and close
+          onToolComplete(selectedTool.id, null);
+          onClose();
+        }}
+      />
+    );
   }
 
   return null;

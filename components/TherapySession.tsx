@@ -406,6 +406,7 @@ export default function TherapySession({
       {showCopingTools && currentSession && (
         <CopingToolModal
           feeling={feeling}
+          sessionId={currentSession.id}
           onClose={() => setShowCopingTools(false)}
           onToolComplete={handleCopingToolComplete}
         />

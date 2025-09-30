@@ -32,6 +32,35 @@ export const BREATHING_PATTERNS: Record<string, BreathingPattern> = {
 
 // All Available Coping Tools
 export const COPING_TOOLS: CopingTool[] = [
+  // Music Therapy - NEW!
+  {
+    id: 'music-therapy',
+    name: 'Music Therapy',
+    description: 'Listen to curated songs that match and uplift your mood',
+    category: 'cognitive',
+    feelings: [
+      'overwhelmed',
+      'anxious',
+      'sad',
+      'stressed',
+      'lonely',
+      'frustrated',
+      'tired',
+      'confused',
+      'angry',
+      'worried',
+    ],
+    duration: 300, // 5 minutes average
+    instructions: [
+      'Choose a song from the curated playlist',
+      'Find a comfortable place to sit or lie down',
+      'Listen with headphones for the best experience',
+      'Let the music guide your emotions',
+      'Notice how your body responds to the music',
+    ],
+    isInteractive: true,
+    effectivenessScore: 0,
+  },
   {
     id: 'box-breathing',
     name: 'Box Breathing',
